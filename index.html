@@ -136,7 +136,7 @@
   <div id="introCard" class="card">
     <div class="note" style="margin-bottom:12px"><b>コツ</b>：<b>真横</b>から<b>同じリズムで数本</b>投げるスロー動画が最適。各スローを自動検出し、毎回どれだけ同じに投げられているかを解析します。</div>
     <label class="drop" for="file">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" class="ic"><path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" class="ic" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       <div class="big">タップして動画を選択</div><div class="sm">スロー動画・真横・複数本がおすすめ</div>
     </label>
     <input id="file" type="file" accept="video/*" class="hidden" />
@@ -164,6 +164,8 @@
       <div class="seg" id="smoothSeg"><button data-sm="0">なし</button><button data-sm="2" class="on">標準</button><button data-sm="4">強</button></div>
       <div class="grouplab">スロー検出の感度</div>
       <div class="seg" id="sensSeg"><button data-se="low">低<span class="s">数を絞る</span></button><button data-se="mid" class="on">標準</button><button data-se="high">高<span class="s">多めに</span></button></div>
+      <div class="grouplab">読み取り精度</div>
+      <div class="row"><div><div class="lab">自動ズーム検出（精度↑）</div><div class="desc">人物に合わせて切り出し、肩・骨格を高精度化（処理は少し遅く）</div></div><span class="sw"><input type="checkbox" id="t_autozoom" checked><span class="track"></span><span class="knob"></span></span></div>
       <div class="grouplab">表示要素</div>
       <div class="row"><div class="lab"><span class="dot" style="background:var(--skel)"></span>骨格・体幹</div><span class="sw"><input type="checkbox" id="t_skeleton" checked><span class="track"></span><span class="knob"></span></span></div>
       <div class="row"><div class="lab"><span class="dot" style="background:var(--wrist)"></span>手首の軌道</div><span class="sw"><input type="checkbox" id="t_wrist" checked><span class="track"></span><span class="knob"></span></span></div>
@@ -208,7 +210,7 @@
       <div class="grouplab" style="margin-top:14px">いちばん直したいポイント</div>
       <div id="focusCard"></div>
       <div class="grouplab" style="margin-top:14px">クイック確認</div>
-      <div class="saverow"><button id="qaRelease" class="btn ghost">◉ リリースをスロー確認</button><button id="qaCompare" class="btn ghost">⧉ お手本と比較</button></div>
+      <div class="saverow"><button id="qaRelease" class="btn ghost">🔁 リリースをスロー確認</button><button id="qaCompare" class="btn ghost">🆚 お手本と比較</button></div>
       <div class="saverow"><button id="qaRhythm" class="btn ghost">🔊 リズムを音で確認</button><button id="qaDetails" class="btn ghost">📊 詳細を見る</button></div>
       <div class="note" id="tempoLine" style="margin-top:10px"></div>
     </div>
@@ -222,7 +224,7 @@
         <button id="stepF" class="iconbtn" aria-label="次のコマ"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M15 6h2v12h-2zM5 6l9.5 6L5 18z"/></svg></button>
         <input id="seek" type="range" min="0" max="100" value="0" step="1" />
       </div>
-      <div class="saverow"><button id="loopBtn" class="btn ghost">◉ リリース確認（スローでループ）</button></div>
+      <div class="saverow"><button id="loopBtn" class="btn ghost">🔁 リリース確認（スローでループ）</button></div>
       <div class="grouplab">スロー選択</div>
       <div class="chips" id="throwChips"></div>
       <div class="chips" id="phaseChips"><div class="chip" data-ph="bk">バック</div><div class="chip" data-ph="rel">リリース</div><div class="chip" data-ph="fo">フォロー</div></div>
@@ -241,7 +243,7 @@
 
       <div class="legend" id="legend"></div>
       <div class="sideTag" id="sideTag"></div>
-      <div class="saverow"><button id="savePng" class="btn ghost">🖼 画像を保存</button><button id="saveVid" class="btn ghost">⏏️ 動画保存(webm)</button></div>
+      <div class="saverow"><button id="savePng" class="btn ghost">🖼 画像を保存</button><button id="saveVid" class="btn ghost">🎬 動画保存(webm)</button></div>
       <div class="note" style="margin-top:10px">※iPhoneで保存できない場合は画面録画が確実です。</div>
     </div>
 
@@ -306,6 +308,7 @@
 const $=(id)=>document.getElementById(id);
 const COLORS={wrist:"#34D6E7",elbow:"#F4B43E",shoulder:"#46D67A",finger:"#F25C9A",skel:"#E9EEFB",guide:"#E7C84A"};
 const GATE=0.25;
+const GATE_HARD=0.2;
 const MODEL_MAP={ movenet:{lSh:5,rSh:6,lEl:7,rEl:8,lWr:9,rWr:10,lHip:11,rHip:12,lIdx:null,rIdx:null}, blazepose:{lSh:11,rSh:12,lEl:13,rEl:14,lWr:15,rWr:16,lHip:23,rHip:24,lIdx:19,rIdx:20} };
 const SK_EDGES=[["lSh","rSh"],["lSh","lEl"],["lEl","lWr"],["rSh","rEl"],["rEl","rWr"],["lSh","lHip"],["rSh","rHip"],["lHip","rHip"]];
 const SENS={low:0.5,mid:0.38,high:0.27};
@@ -323,7 +326,7 @@ const PRESETS={
   numbers:{skeleton:true,wrist:true,elbow:true,shoulder:false,finger:false,guide:true,angle:true,ideal:true,grid:false,black:false},
 };
 
-let engine={type:"blazepose",variant:"full"}, smoothW=2, sensitivity="mid";
+let engine={type:"blazepose",variant:"full"}, smoothW=2, sensitivity="mid", autoZoom=true;
 let speed=0.5, trailFull=true, trailLen=1e9, thickness=1;
 let videoFile=null, vw=0, vh=0, duration=0;
 let detector=null, detectorKey="", frames=[], times=[], side="right", fingerReal=true;
@@ -337,8 +340,8 @@ const video=$("preview"), out=$("out"), octx=out.getContext("2d");
 const cA=$("cmpA"), cB=$("cmpB"), ctxA=cA.getContext("2d"), ctxB=cB.getContext("2d");
 
 /* ---------- persistence ---------- */
-function saveSettings(){ try{ localStorage.setItem("dmc_settings",JSON.stringify({S,engine,smoothW,sensitivity,speed,trailFull,trailLen,thickness})); }catch(e){} }
-function loadSettings(){ try{ const r=JSON.parse(localStorage.getItem("dmc_settings")||"null"); if(r){ Object.assign(S,r.S||{}); if(r.engine)engine=r.engine; if(r.smoothW!=null)smoothW=r.smoothW; if(r.sensitivity)sensitivity=r.sensitivity; if(r.speed)speed=r.speed; if(r.trailFull!=null)trailFull=r.trailFull; if(r.trailLen!=null)trailLen=r.trailLen; if(r.thickness)thickness=r.thickness; } }catch(e){} }
+function saveSettings(){ try{ localStorage.setItem("dmc_settings",JSON.stringify({S,engine,smoothW,sensitivity,autoZoom,speed,trailFull,trailLen,thickness})); }catch(e){} }
+function loadSettings(){ try{ const r=JSON.parse(localStorage.getItem("dmc_settings")||"null"); if(r){ Object.assign(S,r.S||{}); if(r.engine)engine=r.engine; if(r.smoothW!=null)smoothW=r.smoothW; if(r.sensitivity)sensitivity=r.sensitivity; if(r.autoZoom!=null)autoZoom=r.autoZoom; if(r.speed)speed=r.speed; if(r.trailFull!=null)trailFull=r.trailFull; if(r.trailLen!=null)trailLen=r.trailLen; if(r.thickness)thickness=r.thickness; } }catch(e){} }
 function loadHistory(){ try{ return JSON.parse(localStorage.getItem("dmc_history")||"[]"); }catch(e){ return []; } }
 function saveHistory(h){ try{ localStorage.setItem("dmc_history",JSON.stringify(h)); }catch(e){} }
 
@@ -353,6 +356,7 @@ function syncUI(){
   document.querySelectorAll("#sensSeg button").forEach(b=>b.classList.toggle("on",b.dataset.se===sensitivity));
   document.querySelectorAll('.chips [data-sp]').forEach(c=>c.classList.toggle("on",+c.dataset.sp===speed));
   const tc=$("trailChips"); if(tc) tc.querySelectorAll("[data-tr]").forEach(c=>c.classList.toggle("on",(c.dataset.tr==="full")===trailFull&&(trailFull|| +c.dataset.tr===trailLen)));
+  if($("t_autozoom"))$("t_autozoom").checked=autoZoom;
   if($("thick")) $("thick").value=thickness;
 }
 loadSettings();
@@ -362,6 +366,7 @@ document.querySelectorAll("#engineSeg button").forEach(b=>b.addEventListener("cl
 document.querySelectorAll("#smoothSeg button").forEach(b=>b.addEventListener("click",()=>{ smoothW=+b.dataset.sm; document.querySelectorAll("#smoothSeg button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); saveSettings(); }));
 document.querySelectorAll("#sensSeg button").forEach(b=>b.addEventListener("click",()=>{ sensitivity=b.dataset.se; document.querySelectorAll("#sensSeg button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); saveSettings(); }));
 $("t_rhythm").addEventListener("change",()=>{ rhythmClick=$("t_rhythm").checked; if(rhythmClick)ensureAudio(); });
+$("t_autozoom").addEventListener("change",()=>{ autoZoom=$("t_autozoom").checked; saveSettings(); });
 function afterToggle(){ if(!$("resultCard").classList.contains("hidden")){ pause(); buildLegend(); render(); } }
 
 /* ---------- file ---------- */
@@ -376,15 +381,37 @@ async function ensureDetector(){ const key=engine.type+":"+engine.variant; if(de
   if(engine.type==="movenet") detector=await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet,{modelType:poseDetection.movenet.modelType.SINGLEPOSE_THUNDER});
   else detector=await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose,{runtime:"tfjs",modelType:engine.variant,enableSmoothing:false}); detectorKey=key; }
 function seekTo(t){ return new Promise((res)=>{ let done=false; const fin=()=>{ if(done)return; done=true; video.removeEventListener("seeked",on); requestAnimationFrame(()=>res()); }; const on=()=>fin(); video.addEventListener("seeked",on); try{ video.currentTime=Math.min(duration,Math.max(0,t)); }catch(e){ fin(); } setTimeout(fin,600); }); }
-function normalize(kp){ if(!kp)return null; return kp.map(p=>({x:p.x/vw,y:p.y/vh,score:(p.score==null?p.visibility:p.score)})); }
+function normalizeKp(kp,roi,cw,ch){ if(!kp)return null; return kp.map(p=>{ let X=p.x,Y=p.y; if(roi){ X=roi.x+(p.x/cw)*roi.w; Y=roi.y+(p.y/ch)*roi.h; } return {x:X/vw,y:Y/vh,score:(p.score==null?p.visibility:p.score)}; }); }
+async function estimateROI(){ const foff=document.createElement("canvas"); foff.width=vw; foff.height=vh; const fc=foff.getContext("2d"); const N=Math.min(24,Math.max(8,Math.round((duration||1)*2))); const xs=[],ys=[];
+  for(let i=0;i<=N;i++){ const t=duration*i/Math.max(1,N); await seekTo(t); fc.drawImage(video,0,0,vw,vh); let kp=null; try{ const ps=await detector.estimatePoses(foff,{flipHorizontal:false}); if(ps&&ps[0])kp=ps[0].keypoints; }catch(e){} if(kp){ for(const p of kp){ const sc=(p.score==null?p.visibility:p.score); if(p&&sc!=null&&sc>0.3){ xs.push(p.x); ys.push(p.y); } } } setBar(0.03+0.15*i/Math.max(1,N)); }
+  if(xs.length<10) return null; xs.sort((a,b)=>a-b); ys.sort((a,b)=>a-b);
+  const q=(arr,pp)=>arr[Math.min(arr.length-1,Math.max(0,Math.round((arr.length-1)*pp)))];
+  let x0=q(xs,0.02),x1=q(xs,0.98),y0=q(ys,0.02),y1=q(ys,0.98); let w=x1-x0,h=y1-y0; if(w<=0||h<=0) return null;
+  x0-=w*0.22; x1+=w*0.22; y0-=h*0.16; y1+=h*0.12;
+  const minW=vw*0.5,minH=vh*0.55; let cwid=x1-x0,chei=y1-y0; const cx=(x0+x1)/2,cy=(y0+y1)/2;
+  if(cwid<minW){ x0=cx-minW/2; x1=cx+minW/2; } if(chei<minH){ y0=cy-minH/2; y1=cy+minH/2; }
+  x0=Math.max(0,x0); y0=Math.max(0,y0); x1=Math.min(vw,x1); y1=Math.min(vh,y1); w=x1-x0; h=y1-y0;
+  if(w>=vw*0.94&&h>=vh*0.94) return null;
+  return {x:x0,y:y0,w,h}; }
 
 async function analyze(){ if(!videoFile){ alert("先に動画を選択してください"); return; } $("errBox").classList.add("hidden"); showProc("AIモデルを準備しています…");
   try{ await ensureDetector(); }catch(err){ showErr('<b>AIモデルを読み込めませんでした。</b><br><b>Chrome等の通常ブラウザ</b>でインターネット接続のうえお試しください。MoveNetでも試せます。'); return; }
   if(!vw){ await new Promise(r=>{ if(video.readyState>=1)r(); else video.addEventListener("loadedmetadata",r,{once:true}); }); vw=video.videoWidth; vh=video.videoHeight; duration=video.duration||0; }
-  $("procMsg").textContent="フレームを解析中…"; const off=document.createElement("canvas"); off.width=vw; off.height=vh; const oc=off.getContext("2d");
+  const off=document.createElement("canvas"); const oc=off.getContext("2d");
+  let useRoi=null;
+  if(autoZoom){ $("procMsg").textContent="人物の位置を検出中…"; try{ useRoi=await estimateROI(); }catch(e){ useRoi=null; } }
+  $("procMsg").textContent="フレームを解析中…";
+  const cw=useRoi?Math.max(1,Math.round(useRoi.w)):vw, ch=useRoi?Math.max(1,Math.round(useRoi.h)):vh; off.width=cw; off.height=ch;
   frames=[]; times=[]; const target=Math.min(720,Math.max(40,Math.round(duration*30))); const dt=duration>0?duration/target:0.033; video.pause();
-  for(let i=0;i<=target;i++){ const t=Math.min(duration,i*dt); await seekTo(t); oc.drawImage(video,0,0,vw,vh); let kp=null; try{ const ps=await detector.estimatePoses(off,{flipHorizontal:false}); if(ps&&ps[0])kp=ps[0].keypoints; }catch(e){ kp=null; } frames.push({kp:normalize(kp)}); times.push(t); if(i%2===0)setBar(i/target); }
-  setBar(1); side=pickSide(frames); buildTrack(); computeBodyScale(); computePerFrame(); segmentThrows(); computeAggregate(); pickBest(); pickWorst(); referenceThrow=bestIdx; cmpA=-1; cmpB=-1; cmpPause();
+  const base=autoZoom?0.2:0, span=autoZoom?0.8:1;
+  for(let i=0;i<=target;i++){ const t=Math.min(duration,i*dt); await seekTo(t);
+    if(useRoi) oc.drawImage(video,useRoi.x,useRoi.y,useRoi.w,useRoi.h,0,0,cw,ch); else oc.drawImage(video,0,0,cw,ch);
+    let kp=null; try{ const ps=await detector.estimatePoses(off,{flipHorizontal:false}); if(ps&&ps[0])kp=ps[0].keypoints; }catch(e){ kp=null; }
+    frames.push({kp:normalizeKp(kp,useRoi,cw,ch)}); times.push(t); if(i%2===0)setBar(base+span*(i/target)); }
+  setBar(1); side=pickSide(frames); buildTrack();
+  const validWr=track[TS.wr].filter(Boolean).length;
+  if(validWr < Math.max(8, Math.round(frames.length*0.15))){ showErr('<b>フォームを検出できませんでした。</b><br>投げ手の腕がはっきり映っているか確認してください。改善案：①腕全体（できれば全身）が入る構図にする ②明るい場所で撮る ③「詳細設定」でエンジンを <b>MoveNet（上半身向き）</b> に切り替える。'); return; }
+  computeBodyScale(); computePerFrame(); segmentThrows(); computeAggregate(); pickBest(); pickWorst(); referenceThrow=bestIdx; cmpA=-1; cmpB=-1; cmpPause();
   $("procCard").classList.add("hidden"); setupResult(); }
 $("analyze").addEventListener("click",analyze);
 
@@ -393,12 +420,15 @@ function avgDt(){ return frames.length>1?(times[frames.length-1]-times[0])/(fram
 function pickSide(fr){ let lm=0,rm=0,lp=null,rp=null; const M=MODEL_MAP[engine.type]; for(const f of fr){ if(!f.kp){lp=null;rp=null;continue;} const lw=f.kp[M.lWr],rw=f.kp[M.rWr]; if(valid(lw)){ if(lp)lm+=Math.hypot(lw.x-lp.x,lw.y-lp.y); lp=lw; } else lp=null; if(valid(rw)){ if(rp)rm+=Math.hypot(rw.x-rp.x,rw.y-rp.y); rp=rw; } else rp=null; } return lm>rm?"left":"right"; }
 
 /* ---------- post-process ---------- */
-function interp(s,maxGap){ const o=s.slice(); let i=0; while(i<o.length){ if(o[i]==null){ let p=i-1; while(p>=0&&o[p]==null)p--; let n=i; while(n<o.length&&o[n]==null)n++; if(p>=0&&n<o.length&&(n-p-1)<=maxGap){ const a=o[p],b=o[n]; for(let j=p+1;j<n;j++){ const r=(j-p)/(n-p); o[j]={x:a.x+(b.x-a.x)*r,y:a.y+(b.y-a.y)*r}; } i=n; } else i=(n>i)?n:i+1; } else i++; } return o; }
-function smooth(s,w){ if(w<=0)return s.slice(); const o=new Array(s.length).fill(null); for(let i=0;i<s.length;i++){ if(!s[i])continue; let sx=0,sy=0,c=0; for(let j=i-w;j<=i+w;j++){ if(j>=0&&j<s.length&&s[j]){sx+=s[j].x;sy+=s[j].y;c++;} } o[i]=c?{x:sx/c,y:sy/c}:{x:s[i].x,y:s[i].y}; } return o; }
+function interp(s,maxGap){ const o=s.slice(); let i=0; while(i<o.length){ if(o[i]==null){ let p=i-1; while(p>=0&&o[p]==null)p--; let n=i; while(n<o.length&&o[n]==null)n++; if(p>=0&&n<o.length&&(n-p-1)<=maxGap){ const a=o[p],b=o[n]; for(let j=p+1;j<n;j++){ const r=(j-p)/(n-p); o[j]={x:a.x+(b.x-a.x)*r,y:a.y+(b.y-a.y)*r,score:0.4}; } i=n; } else i=(n>i)?n:i+1; } else i++; } return o; }
+function med1(a){ const b=a.slice().sort((x,y)=>x-y); const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
+function medianFilter(s){ const o=s.slice(); for(let i=0;i<s.length;i++){ if(!s[i])continue; const xs=[],ys=[]; for(let j=i-1;j<=i+1;j++){ if(j>=0&&j<s.length&&s[j]){ xs.push(s[j].x); ys.push(s[j].y); } } if(xs.length>=2) o[i]={x:med1(xs),y:med1(ys),score:s[i].score}; } return o; }
+function smoothSeries(s,w){ const m=medianFilter(s); if(w<=0)return m.map(p=>p?{x:p.x,y:p.y}:null); const o=new Array(m.length).fill(null); for(let i=0;i<m.length;i++){ if(!m[i])continue; let sx=0,sy=0,sw=0; for(let j=i-w;j<=i+w;j++){ if(j>=0&&j<m.length&&m[j]){ const wt=(m[j].score||0.5)+0.05; sx+=m[j].x*wt; sy+=m[j].y*wt; sw+=wt; } } o[i]=sw>0?{x:sx/sw,y:sy/sw}:{x:m[i].x,y:m[i].y}; } return o; }
 function buildTrack(){ const M=MODEL_MAP[engine.type]; const raw={}; const LOG=["lSh","rSh","lEl","rEl","lWr","rWr","lHip","rHip"];
-  for(const L of LOG){ const mi=M[L]; raw[L]=frames.map(f=>{ if(!f.kp||mi==null)return null; const p=f.kp[mi]; return valid(p)?{x:p.x,y:p.y}:null; }); }
-  const idxKey=side==="left"?"lIdx":"rIdx"; if(M[idxKey]!=null){ const mi=M[idxKey]; fingerReal=true; raw.idx=frames.map(f=>{ if(!f.kp)return null; const p=f.kp[mi]; return valid(p)?{x:p.x,y:p.y}:null; }); } else { fingerReal=false; const eK=side==="left"?"lEl":"rEl",wK=side==="left"?"lWr":"rWr"; raw.idx=frames.map((f,i)=>{ const e=raw[eK][i],w=raw[wK][i]; return (e&&w)?{x:w.x+0.5*(w.x-e.x),y:w.y+0.5*(w.y-e.y)}:null; }); }
-  track={}; for(const k of Object.keys(raw)) track[k]=smooth(interp(raw[k],6),smoothW); TS=side==="left"?{sh:"lSh",el:"lEl",wr:"lWr"}:{sh:"rSh",el:"rEl",wr:"rWr"}; }
+  const pt=(p)=> (p&&p.score!=null&&p.score>GATE_HARD)?{x:p.x,y:p.y,score:p.score}:null;
+  for(const L of LOG){ const mi=M[L]; raw[L]=frames.map(f=>{ if(!f.kp||mi==null)return null; return pt(f.kp[mi]); }); }
+  const idxKey=side==="left"?"lIdx":"rIdx"; if(M[idxKey]!=null){ const mi=M[idxKey]; fingerReal=true; raw.idx=frames.map(f=>{ if(!f.kp)return null; return pt(f.kp[mi]); }); } else { fingerReal=false; const eK=side==="left"?"lEl":"rEl",wK=side==="left"?"lWr":"rWr"; raw.idx=frames.map((f,i)=>{ const e=raw[eK][i],w=raw[wK][i]; return (e&&w)?{x:w.x+0.5*(w.x-e.x),y:w.y+0.5*(w.y-e.y),score:Math.min(e.score,w.score)*0.9}:null; }); }
+  track={}; for(const k of Object.keys(raw)) track[k]=smoothSeries(interp(raw[k],8),smoothW); TS=side==="left"?{sh:"lSh",el:"lEl",wr:"lWr"}:{sh:"rSh",el:"rEl",wr:"rWr"}; }
 function computeBodyScale(){ const a=[]; for(let i=0;i<frames.length;i++){ const s=track[TS.sh][i],e=track[TS.el][i]; if(s&&e)a.push(Math.hypot((s.x-e.x)*vw,(s.y-e.y)*vh)); } upperArm=median(a)||Math.max(1,vh*0.15); }
 function angAt(b,a,c){ if(!a||!b||!c)return null; const ax=(a.x-b.x)*vw,ay=(a.y-b.y)*vh,cx=(c.x-b.x)*vw,cy=(c.y-b.y)*vh; const d=Math.hypot(ax,ay)*Math.hypot(cx,cy); if(!d)return null; let t=(ax*cx+ay*cy)/d; t=clamp(t,-1,1); return Math.acos(t)*180/Math.PI; }
 function computePerFrame(){ const n=frames.length; elbowAngle=new Array(n).fill(null); wspeed=new Array(n).fill(null); for(let i=0;i<n;i++)elbowAngle[i]=angAt(track[TS.el][i],track[TS.sh][i],track[TS.wr][i]); for(let i=1;i<n;i++){ const a=track[TS.wr][i-1],b=track[TS.wr][i]; if(a&&b){ const dx=(b.x-a.x)*vw,dy=(b.y-a.y)*vh,ddt=Math.max(1e-3,times[i]-times[i-1]); wspeed[i]=Math.hypot(dx,dy)/ddt; } } }
